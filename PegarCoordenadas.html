@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Pegar Coordenadas</title>
+	<script src="jquery-2.2.1.min.js" ></script>
+	<!-- Fontes consultadas
+		http://www.monolitonimbus.com.br/como-converter-endereco-em-latitude-e-longitude/
+		http://www.scriptcase.com.br/forum/index.php?topic=6610.0
+		http://mariomoraesneto.blogspot.com.br/2012/12/geolocation-com-html-5-e-api-mapas-do.html
+		https://github.com/mariomoraesneto/blog/blob/master/Geolocation.html
+	-->
+	<!-- Adiciona arquivo externo de javascript - API de Mapa do Google -->
+    <script src="http://maps.google.com/maps/api/js?key=suaChave"></script>
+    <style type="text/css">
+  
+        #divMapa
+        {
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body>
+	<center>
+		
+			Rua: <input type="text" id="street_address"/> <br/><br/>
+			<!--Numero: <input type="text"  id="street_number" />--> <br/><br/>
+			Bairro: <input type="text" id="neighborhood" /> <br/><br/>
+			<!-- CEP: <input type="text" " id="postal_code" />--> <br/><br/>
+			<button onclick="pegarDados()">Salvar</button>
+			<button type="submit" onclick="enviaDadosGeoCoding()">Converter</button>
+
+			
+			<button onclick="geraMapa()">Gerar Mapa</button>
+			<br/><br/><br/><br/>
+			<div id="divMapa"></div>
+	</center>
+
+	<script type="text/javascript">
+		var street_address;
+		var street_number;
+		var postal_code;
+		var neighborhood;
+		var url = "https://maps.googleapis.com/maps/api/geocode/json?";
+		var key = "SUA_CHAVE";
+		var data = "";
+		var lat ="",lon="";
+
+		//pegar dados do JavaScript
+		function pegarDados(){
+			street_address = document.getElementById('street_address');
+			street_number = document.getElementById("street_number");
+			neighborhood = document.getElementById("neighborhood");
+			postal_code = document.getElementById("postal_code");
+			console.log("Rua: "+street_address.value+", Bairro: "+neighborhood.value);
+		}
+		
+		function enviaDadosGeoCoding(){
+
+			$.ajax({
+				url: url,
+				cache: false,
+				crossDomain: true,
+				dataType: "json",
+				data:"address="+street_address.value+"&components=neighborhood:"+neighborhood.value+"&key="+key,
+
+					error: function(data){
+						this.data = data;
+						console.log(data);
+					},
+					success: function (retorno,sit){            //Sucesso no AJAX
+						console.log(sit);
+
+						if(sit == "success" || sit == "OK"){
+							console.log(retorno);
+							lat = retorno.results[0].geometry.location.lat;
+							lon = retorno.results[0].geometry.location.lng;
+							
+
+							console.log(lat);
+							console.log(lon);
+						}else{
+							console.log("Requisição Invalida!");
+						}
+					}
+			});
+		}
+
+		function geraMapa(){
+			//gerando latitude e longitude de acordo com os parametros
+			var latlon = new google.maps.LatLng(lat,lon);
+			var divMapa = document.getElementById('divMapa');
+			//tamanho do mapa
+			divMapa.style.height = '250px';
+			divMapa.style.width = '500px';
+
+			//configurações do mapa
+			var Opcoes = {
+				center: latlon, zoom: 15,
+				mapTypeId: google.maps.MapTypeId.ROADMAP,
+				mapTypeControl:true,
+				navigationControlOptions: { style:google.maps.NavigationControlStyle.SMALL }
+			};
+
+			//cria o mapa na divMapa
+			var map = new google.maps.Map(document.getElementById("divMapa"),Opcoes);
+			//cria o marcador que vai aparecer no mapa
+			var marcador = new google.maps.Marker({position:latlon, map: map, title: "Você esta aqui"});
+		}
+	</script>
+</body>
+</html>
